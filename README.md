@@ -15,6 +15,38 @@ Start a development server with:
 stack build --exec test-minimal
 ```
 
+## Banco de dados (PostgreSQL)
+
+A conexão com o banco é montada em `app/Main.hs` a partir de variáveis de ambiente.
+Se uma variável não estiver definida, o valor padrão da tabela é usado.
+
+| Variável      | Padrão      | O que é              |
+|---------------|-------------|----------------------|
+| `DB_HOST`     | `localhost` | Endereço do servidor |
+| `DB_PORT`     | `5432`      | Porta do servidor    |
+| `DB_USER`     | `fulano`    | Usuário do banco     |
+| `DB_PASSWORD` | `123`       | Senha do usuário     |
+| `DB_NAME`     | `proj`      | Nome do banco        |
+
+No Windows PowerShell, defina as variáveis antes de rodar o projeto, no mesmo terminal:
+
+```powershell
+$env:DB_USER = "postgres"
+$env:DB_PASSWORD = "sua_senha"
+$env:DB_NAME = "proj"
+stack run
+```
+
+Essas variáveis valem só para aquele terminal. Ao abrir um novo, defina de novo.
+O banco indicado em `DB_NAME` precisa existir (crie com `CREATE DATABASE proj;` no psql ou pgAdmin).
+Nunca coloque a sua senha real no código nem faça commit dela.
+
+No Linux ou macOS:
+
+```bash
+DB_USER=postgres DB_PASSWORD=sua_senha DB_NAME=proj stack run
+```
+
 ## Documentation
 
 * Read the [Yesod Book](https://www.yesodweb.com/book) online for free
