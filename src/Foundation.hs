@@ -11,7 +11,8 @@
 
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE UndecidableInstances #-}  
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE DataKinds #-} -- exigido pelo persistent >= 2.14 para gerar as entidades
 
 module Foundation where
 
