@@ -2,6 +2,11 @@
 # Imagem com as ferramentas para compilar o projeto com o Stack.
 FROM debian:bookworm-slim AS build
 
+# A imagem Debian vem sem locale UTF-8, e as ferramentas do GHC
+# (happy, alex, o proprio compilador) falham ao ler arquivos com
+# acentos. C.UTF-8 ja vem instalado, so precisa ser ativado.
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates curl git build-essential xz-utils \
         libgmp-dev libffi-dev zlib1g-dev libnuma-dev pkg-config \
@@ -29,6 +34,8 @@ RUN stack build -j2 \
 # ---------- Etapa 2: execucao ----------
 # Imagem final pequena, so com o executavel e os arquivos estaticos.
 FROM debian:bookworm-slim
+
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates libgmp10 libffi8 zlib1g libnuma1 netbase \
