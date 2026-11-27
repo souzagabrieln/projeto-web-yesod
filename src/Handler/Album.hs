@@ -17,6 +17,8 @@ import Util.Validacao
 import Util.Formatacao
 import Util.Pagina
 import Handler.Faixa (faixaForm, proximoNumero, avisoNumeroRepetido)
+import Data.Time (getCurrentTimeZone)
+import Model.Movimentacao (nomeTipo)
 
 -- Formulario de album. Serve para cadastro (Nothing) e edicao (Just ...).
 -- Artista e genero sao escolhidos em listas carregadas do banco.
@@ -156,13 +158,19 @@ getAlbumR albumId = do
 -- faixa com erro mostra esta mesma pagina, com os erros no formulario.
 paginaAlbum :: AlbumId -> Widget -> Enctype -> Handler Html
 paginaAlbum albumId camposFaixa enctype = do
-    (album, artista, genero, faixas) <- runDB $ do
+    fuso <- liftIO getCurrentTimeZone
+    (album, artista, genero, faixas, movimentos, fornecedores) <- runDB $ do
         album   <- get404 albumId
         artista <- get404 (albumArtistaId album)
         genero  <- get404 (albumGeneroId album)
         faixas  <- selectList [FaixaAlbumId ==. albumId] [Asc FaixaNumero]
-        pure (album, artista, genero, faixas)
+        movimentos <- selectList [MovimentacaoEstoqueAlbumId ==. albumId]
+                                 [Desc MovimentacaoEstoqueDataHora]
+        fornecedores <- selectList [] []
+        pure (album, artista, genero, faixas, movimentos, fornecedores)
     let duracaoTotal = sum [ d | Entity _ f <- faixas, Just d <- [faixaDuracao f] ]
+        nomeForn = Map.fromList [ (k, fornecedorNome f) | Entity k f <- fornecedores ]
+        fornDe = maybe "-" (\k -> Map.findWithDefault "-" k nomeForn)
     defaultLayout $ do
         setTitle (toHtml (albumTitulo album))
         [whamlet|
@@ -217,6 +225,31 @@ paginaAlbum albumId camposFaixa enctype = do
             <form .formulario method=post action=@{FaixaNovaR albumId} enctype=#{enctype}>
                 ^{camposFaixa}
                 <input type=submit value="Adicionar faixa">
+
+            <div .cabecalho-pagina>
+                <h2>Movimentações de estoque
+                <a .botao href=@?{(EntradaEstoqueR, [("album", toPathPiece albumId)])}>Registrar entrada
+            $if null movimentos
+                <p .vazio>Nenhuma entrada ou saída registrada para este álbum.
+            $else
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data
+                            <th>Tipo
+                            <th>Qtd.
+                            <th>Fornecedor
+                            <th>Custo unit.
+                            <th>Observação
+                    <tbody>
+                        $forall Entity _ m <- movimentos
+                            <tr>
+                                <td .nowrap>#{formatarDataHora fuso (movimentacaoEstoqueDataHora m)}
+                                <td>#{nomeTipo (movimentacaoEstoqueTipo m)}
+                                <td>#{movimentacaoEstoqueQuantidade m}
+                                <td>#{fornDe (movimentacaoEstoqueFornecedorId m)}
+                                <td .nowrap>#{maybe "-" formatarPreco (movimentacaoEstoqueCustoUnitario m)}
+                                <td>#{maybe "" id (movimentacaoEstoqueObservacao m)}
         |]
 
 -- POST /albuns/#AlbumId/faixas : cadastra uma faixa.
@@ -265,11 +298,18 @@ postAlbumEditarR albumId = do
 
 -- POST /albuns/#AlbumId/excluir : apaga as faixas e depois o album.
 -- As duas operacoes estao no mesmo runDB, ou seja, na mesma transacao.
+-- Album com movimentacao de estoque nao pode ser excluido, para nao
+-- perder o historico de entradas e saidas.
 postAlbumExcluirR :: AlbumId -> Handler Html
 postAlbumExcluirR albumId = do
     album <- runDB $ get404 albumId
-    runDB $ do
-        deleteWhere [FaixaAlbumId ==. albumId]
-        delete albumId
-    setMessage $ toHtml ("Álbum \"" <> albumTitulo album <> "\" excluído, junto com suas faixas.")
+    movimentos <- runDB $ count [MovimentacaoEstoqueAlbumId ==. albumId]
+    if movimentos > 0
+        then setMessage $ toHtml ("Não é possível excluir \"" <> albumTitulo album
+                <> "\": ele já tem movimentações de estoque registradas.")
+        else do
+            runDB $ do
+                deleteWhere [FaixaAlbumId ==. albumId]
+                delete albumId
+            setMessage $ toHtml ("Álbum \"" <> albumTitulo album <> "\" excluído, junto com suas faixas.")
     redirect AlbunsR

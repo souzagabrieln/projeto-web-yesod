@@ -29,5 +29,15 @@
 /faixas/#FaixaId/editar         FaixaEditarR      GET POST
 /faixas/#FaixaId/excluir        FaixaExcluirR     POST
 
+-- Fornecedores: listar, cadastrar, editar e excluir
+/fornecedores                       FornecedoresR      GET
+/fornecedores/novo                  FornecedorNovoR    GET POST
+/fornecedores/#FornecedorId/editar  FornecedorEditarR  GET POST
+/fornecedores/#FornecedorId/excluir FornecedorExcluirR POST
+
+-- Estoque: situacao atual, historico e entrada de mercadoria
+/estoque                        EstoqueR          GET
+/estoque/entrada                EntradaEstoqueR   GET POST
+
 -- Arquivos estaticos (imagens)
 /static                         StaticR           Static getStatic

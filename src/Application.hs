@@ -16,5 +16,7 @@ import Handler.Genero
 import Handler.Album
 import Handler.Faixa
 import Handler.Importacao
+import Handler.Fornecedor
+import Handler.Estoque
 
 mkYesodDispatch "App" resourcesApp

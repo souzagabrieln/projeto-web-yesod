@@ -23,6 +23,8 @@ import Data.Text (Text)
 import Text.Hamlet (hamletFile)
 import Text.Lucius (luciusFile)
 import Model.Formato (Formato)
+import Model.Movimentacao (TipoMovimentacao)
+import Data.Time (UTCTime)
 
 -- Gera identificadores para os arquivos da pasta static
 -- (ex.: static/img/logo.svg vira img_logo_svg).
@@ -60,6 +62,29 @@ Album
     UniqueAlbum titulo artistaId formato
     deriving Show
 
+-- Fornecedor de mercadoria. O CNPJ fica gravado so com os digitos.
+Fornecedor
+    nome      Text
+    cnpj      Text
+    email     Text     Maybe
+    telefone  Text     Maybe
+    UniqueFornecedorCnpj cnpj
+    deriving Show
+
+-- Historico de tudo que entrou e saiu do estoque. O campo estoque do
+-- Album guarda o saldo atual; esta tabela guarda de onde ele veio.
+--   Entrada: compra de um fornecedor, com custo unitario
+--   Saida  : mercadoria que saiu da loja (as vendas usam este tipo)
+MovimentacaoEstoque
+    albumId       AlbumId
+    tipo          TipoMovimentacao
+    quantidade    Int
+    custoUnitario Double        Maybe
+    fornecedorId  FornecedorId  Maybe
+    dataHora      UTCTime
+    observacao    Text          Maybe
+    deriving Show
+
 -- Faixa pertence a um album; o numero nao se repete dentro do album.
 -- duracao fica em segundos.
 Faixa
@@ -90,8 +115,10 @@ menuItens :: [(Text, Route App)]
 menuItens =
     [ ("Início",   HomeR)
     , ("Álbuns",   AlbunsR)
+    , ("Estoque",  EstoqueR)
     , ("Artistas", ArtistasR)
     , ("Gêneros",  GenerosR)
+    , ("Fornecedores", FornecedoresR)
     ]
 
 instance Yesod App where
