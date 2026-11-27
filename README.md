@@ -143,7 +143,7 @@ Cuidados exigidos pela API:
 | Nome | GitHub | Commits |
 |---|---|---|
 | Gabriel Nascimento Souza| [@souzagabrieln](https://github.com/souzagabrieln) | layout e CRUD de artistas/gêneros; integração com o MusicBrainz; clientes e vendas |
-| Bruna de Araújo Andrade | [littlebodybigheart7] (https://github.com/littlebodybigheart7) | álbuns e faixas; fornecedores e entrada de estoque; painel, filtros e README |
+| Bruna de Araújo Andrade | [@littlebodybigheart7](https://github.com/littlebodybigheart7) | álbuns e faixas; fornecedores e entrada de estoque; painel, filtros e README |
 
 ## Estrutura do código
 
