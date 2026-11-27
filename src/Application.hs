@@ -15,5 +15,6 @@ import Handler.Artista
 import Handler.Genero
 import Handler.Album
 import Handler.Faixa
+import Handler.Importacao
 
 mkYesodDispatch "App" resourcesApp

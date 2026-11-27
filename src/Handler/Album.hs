@@ -80,7 +80,9 @@ getAlbunsR = do
         [whamlet|
             <div .cabecalho-pagina>
                 <h1>Álbuns
-                <a .botao href=@{AlbumNovoR}>Novo álbum
+                <div>
+                    <a .botao href=@{BuscaMusicBrainzR}>Importar do MusicBrainz
+                    <a .botao.secundario href=@{AlbumNovoR}>Cadastro manual
             $if null albuns
                 <p .vazio>Nenhum álbum cadastrado ainda.
             $else

@@ -131,7 +131,7 @@ td.acoes {
     max-width: 520px;
     div { margin-bottom: 12px; }
     label { display: block; font-weight: bold; margin-bottom: 4px; }
-    input[type=text], input[type=number], textarea {
+    input[type=text], input[type=number], input[type=url], textarea {
         width: 100%;
         padding: 8px;
         border: 1px solid #{borda};
@@ -190,3 +190,37 @@ select {
     background: white;
 }
 table a { color: #{destaque}; font-weight: bold; }
+
+/* Busca e importacao do MusicBrainz */
+.busca {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+    input[type=text] {
+        flex: 1 1 200px;
+        padding: 8px;
+        border: 1px solid #{borda};
+        border-radius: 4px;
+        font-size: 1em;
+    }
+}
+.erro {
+    background: #fbeaea;
+    border-left: 4px solid #b3261e;
+    padding: 10px 14px;
+}
+.fonte { font-size: 0.9em; color: #6b635b; }
+.colunas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+}
+.colunas > div { flex: 1 1 320px; }
+.lista-faixas {
+    background: white;
+    border: 1px solid #{borda};
+    padding: 12px 12px 12px 40px;
+    li { padding: 4px 0; }
+    .duracao { color: #6b635b; float: right; }
+}
