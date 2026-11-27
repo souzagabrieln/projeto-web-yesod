@@ -1,0 +1,24 @@
+$doctype 5
+<html lang="pt-BR">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>#{pageTitle pagina} | Loja de Álbuns
+        ^{pageHead pagina}
+    <body>
+        <header .topo>
+            <a .marca href=@{HomeR}>
+                <img src=@{StaticR img_logo_svg} alt="">
+                <span>Loja de Álbuns
+            <nav .menu>
+                $forall (texto, rota) <- menuItens
+                    $if rotaAtual == Just rota
+                        <a .ativo href=@{rota}>#{texto}
+                    $else
+                        <a href=@{rota}>#{texto}
+        <main .conteudo>
+            $maybe msg <- mensagem
+                <div .aviso>#{msg}
+            ^{pageBody pagina}
+        <footer .rodape>
+            Projeto Final de Desenvolvimento Web com Yesod (Haskell)

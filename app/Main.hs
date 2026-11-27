@@ -1,13 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-import Application () -- for YesodDispatch instance
+import Application () -- instancia YesodDispatch
 import Foundation
-import Yesod.Core
+import Yesod
 import Yesod.Static
 
 import Database.Persist.Sqlite
 import Control.Monad.Logger (runStdoutLoggingT)
-import Control.Monad.IO.Class (liftIO)
 import System.Environment (lookupEnv)
 import Data.Maybe (fromMaybe)
 import qualified Data.Text as T
@@ -18,27 +17,12 @@ import qualified Data.Text as T
 lerCaminhoBanco :: IO T.Text
 lerCaminhoBanco = T.pack . fromMaybe "proj.sqlite3" <$> lookupEnv "DB_PATH"
 
-main::IO()
+main :: IO ()
 main = do
-  caminho <- lerCaminhoBanco
-  runStdoutLoggingT $ withSqlitePool caminho 10 $ \pool -> liftIO $ do
-       liftIO $ putStrLn "teste"
-       flip runSqlPersistMPool pool $ do
-              runMigration migrateAll
-              --insert $ Pessoa "Felipe" "Cannarozzo" 34
-              let pid = (toSqlKey 2 :: Key Pessoa)
-             -- nn <- update pid [PessoaIdade +=. 1]
-             -- liftIO $ print nn
-              pessoa <- get pid
-              liftIO $ print pessoa
-       static@(Static settings) <- static "static"
-       warp 8080 (App pool static)
--- Pattern Match
-       
-{-
-main::IO()
-main = runStdoutLoggingT $ withSqlitePool "proj.sqlite3" 10 $ \pool -> liftIO $ do 
-       runSqlPersistMPool (runMigration migrateAll) pool
-       static@(Static settings) <- static "static"
-       warp 8080 (App pool static)
--}
+    caminho <- lerCaminhoBanco
+    runStdoutLoggingT $ withSqlitePool caminho 10 $ \pool -> liftIO $ do
+        -- Cria ou ajusta as tabelas de acordo com o modelo em Foundation.hs
+        runSqlPersistMPool (runMigration migrateAll) pool
+        arquivos <- static "static"
+        putStrLn "Servidor rodando em http://localhost:8080"
+        warp 8080 (App pool arquivos)

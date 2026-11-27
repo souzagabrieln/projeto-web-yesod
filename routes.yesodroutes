@@ -1,9 +1,17 @@
-/                           HomeR               GET
-/add/#Int/#Int              AddR                GET
-/pessoa/#PessoaId           PessoaR             GET POST
-/pessoas                    PessoasR            GET
-!/pessoa/cadastro           PessoaCadastroR     GET POST
-!/pessoa/remove/#PessoaId   PessoaRemoveR       GET POST
-!/pessoa/atualiza/#PessoaId PessoaAtualizaR     GET POST
-/blog-post                  BlogPostR           GET POST
-/static StaticR Static getStatic
+-- Pagina inicial
+/                               HomeR             GET
+
+-- Artistas: listar, cadastrar, editar e excluir
+/artistas                       ArtistasR         GET
+/artistas/novo                  ArtistaNovoR      GET POST
+/artistas/#ArtistaId/editar     ArtistaEditarR    GET POST
+/artistas/#ArtistaId/excluir    ArtistaExcluirR   POST
+
+-- Generos: listar, cadastrar, editar e excluir
+/generos                        GenerosR          GET
+/generos/novo                   GeneroNovoR       GET POST
+/generos/#GeneroId/editar       GeneroEditarR     GET POST
+/generos/#GeneroId/excluir      GeneroExcluirR    POST
+
+-- Arquivos estaticos (imagens)
+/static                         StaticR           Static getStatic

@@ -1,6 +1,6 @@
-{-# LANGUAGE OverloadedStrings    #-}
-{-# LANGUAGE TemplateHaskell      #-}
-{-# LANGUAGE ViewPatterns         #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE ViewPatterns      #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Application where
@@ -8,15 +8,10 @@ module Application where
 import Foundation
 import Yesod.Core
 
-import Add
-import Home
-
-import Handler.BlogPost
-import Handler.Pessoa.Pessoa
-import Handler.Pessoa.PessoaCadastro
-import Handler.Pessoa.Pessoas
-import Handler.Pessoa.PessoaRemove
-import Handler.Pessoa.PessoaAtualiza
-
+-- Cada modulo de handler precisa ser importado aqui para que
+-- o mkYesodDispatch encontre as funcoes getXxxR / postXxxR.
+import Handler.Home
+import Handler.Artista
+import Handler.Genero
 
 mkYesodDispatch "App" resourcesApp

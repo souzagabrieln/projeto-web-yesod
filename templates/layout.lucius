@@ -1,0 +1,143 @@
+/* Cores principais da aplicacao */
+@fundo: #f5f3ef;
+@texto: #2b2622;
+@destaque: #8c2f39;
+@borda: #ddd6cc;
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    background: #{fundo};
+    color: #{texto};
+}
+
+.topo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 24px;
+    background: #{texto};
+    .marca {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: white;
+        font-size: 1.3em;
+        font-weight: bold;
+        text-decoration: none;
+        img { width: 36px; height: 36px; }
+    }
+    .menu a {
+        color: #e8e2d9;
+        margin-left: 16px;
+        text-decoration: none;
+        padding-bottom: 4px;
+    }
+    .menu a.ativo, .menu a:hover {
+        color: white;
+        border-bottom: 2px solid #{destaque};
+    }
+}
+
+.conteudo {
+    max-width: 960px;
+    margin: 24px auto;
+    padding: 0 16px;
+}
+
+.rodape {
+    text-align: center;
+    color: #8a8178;
+    font-size: 0.85em;
+    padding: 24px;
+}
+
+.aviso {
+    background: #e7f3e7;
+    border-left: 4px solid #3c8d3c;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+}
+
+.cabecalho-pagina {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.botao, button, input[type=submit] {
+    display: inline-block;
+    background: #{destaque};
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 14px;
+    font-size: 0.95em;
+    text-decoration: none;
+    cursor: pointer;
+}
+.botao.secundario { background: #6b635b; }
+button.perigo { background: #b3261e; }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border: 1px solid #{borda};
+}
+th, td {
+    text-align: left;
+    padding: 10px;
+    border-bottom: 1px solid #{borda};
+}
+th { background: #ece7df; }
+td.acoes {
+    white-space: nowrap;
+    form { display: inline; }
+}
+
+.vazio {
+    background: white;
+    border: 1px dashed #{borda};
+    padding: 24px;
+    text-align: center;
+}
+
+.cartoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+.cartao {
+    flex: 1 1 200px;
+    background: white;
+    border: 1px solid #{borda};
+    border-radius: 6px;
+    padding: 16px;
+    .numero { font-size: 2em; font-weight: bold; color: #{destaque}; }
+}
+
+/* Formularios gerados por renderDivs */
+.formulario {
+    background: white;
+    border: 1px solid #{borda};
+    padding: 16px;
+    max-width: 520px;
+    div { margin-bottom: 12px; }
+    label { display: block; font-weight: bold; margin-bottom: 4px; }
+    input[type=text], input[type=number], textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #{borda};
+        border-radius: 4px;
+        font-size: 1em;
+    }
+    .errors { color: #b3261e; font-size: 0.9em; margin-top: 4px; }
+    .required label:after { content: " *"; color: #b3261e; }
+}
