@@ -5,10 +5,12 @@ FROM debian:bookworm-slim AS build
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates curl git build-essential xz-utils \
         libgmp-dev libffi-dev zlib1g-dev libnuma-dev pkg-config \
-    && rm -rf /var/lib/apt/lists/*
+        gnupg netbase
 
-# Instala o Stack
-RUN curl -sSL https://get.haskellstack.org/ | sh
+# Instala o Stack (o script usa o apt, por isso a lista de pacotes
+# so e apagada depois dele)
+RUN curl -sSL https://get.haskellstack.org/ | sh \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src
 
@@ -29,7 +31,7 @@ RUN stack build -j2 \
 FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        ca-certificates libgmp10 libffi8 zlib1g libnuma1 \
+        ca-certificates libgmp10 libffi8 zlib1g libnuma1 netbase \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
