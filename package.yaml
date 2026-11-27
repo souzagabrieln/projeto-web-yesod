@@ -5,7 +5,7 @@ dependencies:
 - base
 - yesod-core
 - yesod
-- persistent-postgresql >= 2.10.1.2
+- persistent-sqlite
 - text >= 1.2.4.0
 - monad-logger >= 0.3.36
 - yesod-static >= 1.6.1.0
