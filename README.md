@@ -1,66 +1,161 @@
-> *Note: This project was generated from the `yesod-minimal` scaffolding, and does not support features like `yesod devel`. If you want these features, use the `yesod-simple` stack template.*
+# Loja de Álbuns
 
-## Haskell Setup
+Projeto Final de Desenvolvimento Web com Yesod (Haskell).
 
-1. If you haven't already, [install Stack](https://haskell-lang.org/get-started)
-	* On POSIX systems, this is usually `curl -sSL https://get.haskellstack.org/ | sh`
-2. Install GHC: `stack setup`
-3. Build libraries: `stack build`
+## 1. Descrição
 
-## Development
+Sistema web para uma loja de discos (CDs e vinis) controlar o catálogo, o
+estoque e as vendas. Os álbuns podem ser cadastrados à mão ou importados do
+**MusicBrainz**, que preenche título, artista, ano, faixas e capa.
 
-Start a development server with:
+Funcionalidades:
 
-```
-stack build --exec test-minimal
-```
+- **Painel** na página inicial: vendas e faturamento do mês, ticket médio,
+  unidades e valor do estoque, álbuns mais vendidos, álbuns com estoque baixo
+  e últimas vendas.
+- **Catálogo**: CRUD de artistas, gêneros, álbuns e faixas. Um mesmo título
+  pode existir em formatos diferentes (CD, Vinil ou Cassete), cada um
+  com preço e estoque próprios.
+- **Busca e filtros** na lista de álbuns: texto (título ou artista), gênero,
+  formato, situação do estoque e ordenação.
+- **Importação do MusicBrainz**: busca de lançamentos, pré-visualização com
+  faixas e capa, e gravação do álbum com todas as faixas.
+- **Fornecedores** (com validação de CNPJ) e **entrada de mercadoria**, que
+  soma ao estoque e registra o custo unitário.
+- **Estoque**: situação de cada álbum e histórico de movimentações.
+- **Clientes** (com validação de CPF) e **vendas** com vários itens. A venda
+  confere se há estoque, dá baixa automaticamente e pode ser cancelada
+  (o estoque volta).
 
-## Banco de dados (PostgreSQL)
+## 2. Tecnologias
 
-A conexão com o banco é montada em `app/Main.hs` a partir de variáveis de ambiente.
-Se uma variável não estiver definida, o valor padrão da tabela é usado.
+| Tecnologia | Uso no projeto |
+|---|---|
+| Haskell (GHC 9.10.3) | Linguagem |
+| Stack (snapshot `lts-24.40`) | Build e dependências |
+| Yesod 1.6 (`yesod-core`, `yesod-form`, `yesod-static`) | Framework web: rotas, handlers, formulários e arquivos estáticos |
+| Persistent + SQLite (`persistent-sqlite`) | Modelo de dados, migração automática e consultas |
+| Shakespeare (Hamlet e Lucius) | Templates HTML e CSS |
+| `http-conduit` + `aeson` | Requisições HTTP e leitura do JSON das APIs |
+| `time`, `containers`, `text` | Datas, mapas e texto |
 
-| Variável      | Padrão      | O que é              |
-|---------------|-------------|----------------------|
-| `DB_HOST`     | `localhost` | Endereço do servidor |
-| `DB_PORT`     | `5432`      | Porta do servidor    |
-| `DB_USER`     | `fulano`    | Usuário do banco     |
-| `DB_PASSWORD` | `123`       | Senha do usuário     |
-| `DB_NAME`     | `proj`      | Nome do banco        |
+## 3. Como executar
 
-No Windows PowerShell, defina as variáveis antes de rodar o projeto, no mesmo terminal:
+Pré-requisito: [Stack](https://docs.haskellstack.org/en/stable/install_and_upgrade/)
+instalado.
 
-```powershell
-$env:DB_USER = "postgres"
-$env:DB_PASSWORD = "sua_senha"
-$env:DB_NAME = "proj"
+```bash
+git clone https://github.com/souzagabrieln/projeto-web-yesod.git
+cd projeto-web-yesod
+stack build      # a primeira vez demora: baixa o GHC e as bibliotecas
 stack run
 ```
 
-Essas variáveis valem só para aquele terminal. Ao abrir um novo, defina de novo.
-O banco indicado em `DB_NAME` precisa existir (crie com `CREATE DATABASE proj;` no psql ou pgAdmin).
-Nunca coloque a sua senha real no código nem faça commit dela.
+Depois abra **http://localhost:8080** no navegador.
 
-No Linux ou macOS:
+- O banco é um arquivo SQLite (`proj.sqlite3`) criado na pasta onde o
+  `stack run` foi executado. As tabelas são criadas automaticamente na
+  primeira execução (migração do Persistent). Não é preciso instalar banco.
+- Para usar outro arquivo, defina a variável `DB_PATH`:
+  - Linux/macOS: `DB_PATH=outro.sqlite3 stack run`
+  - Windows PowerShell: `$env:DB_PATH = "outro.sqlite3"; stack run`
+- A importação do MusicBrainz precisa de internet. O resto funciona offline.
 
-```bash
-DB_USER=postgres DB_PASSWORD=sua_senha DB_NAME=proj stack run
+Roteiro rápido para testar: cadastre um gênero → importe um álbum em
+*Álbuns → Importar do MusicBrainz* → cadastre um fornecedor → registre uma
+entrada em *Estoque* → cadastre um cliente → registre uma venda em *Vendas* →
+veja o resultado no *Painel*.
+
+## 4. Estrutura do banco de dados
+
+São 9 tabelas, definidas em `src/Foundation.hs`:
+
+| Tabela | Campos principais | Relacionamentos |
+|---|---|---|
+| `artista` | nome (único), país, ano de início | tem muitos álbuns |
+| `genero` | nome (único), descrição | tem muitos álbuns |
+| `album` | título, ano, formato, preço, estoque, URL da capa | pertence a um artista e a um gênero; único por (título, artista, formato) |
+| `faixa` | número, título, duração (segundos) | pertence a um álbum; número único dentro do álbum |
+| `fornecedor` | nome, CNPJ (único), e-mail, telefone | fornece as entradas de estoque |
+| `movimentacao_estoque` | tipo (Entrada/Saída), quantidade, custo unitário, data, observação | pertence a um álbum; entrada aponta o fornecedor |
+| `cliente` | nome, CPF (único), e-mail, telefone | tem muitas vendas |
+| `venda` | data, total, cancelada | pertence a um cliente; tem muitos itens |
+| `item_venda` | quantidade, preço unitário | liga uma venda a um álbum |
+
+```mermaid
+erDiagram
+    ARTISTA ||--o{ ALBUM : grava
+    GENERO ||--o{ ALBUM : classifica
+    ALBUM ||--o{ FAIXA : contem
+    ALBUM ||--o{ MOVIMENTACAO_ESTOQUE : movimenta
+    FORNECEDOR |o--o{ MOVIMENTACAO_ESTOQUE : fornece
+    CLIENTE ||--o{ VENDA : compra
+    VENDA ||--|{ ITEM_VENDA : possui
+    ALBUM ||--o{ ITEM_VENDA : vendido_em
 ```
 
-## Documentation
+Regras importantes:
 
-* Read the [Yesod Book](https://www.yesodweb.com/book) online for free
-* Check [Stackage](http://stackage.org/) for documentation on the packages in your LTS Haskell version, or [search it using Hoogle](https://www.stackage.org/lts/hoogle?q=). Tip: Your LTS version is in your `stack.yaml` file.
-* For local documentation, use:
-	* `stack haddock --open` to generate Haddock documentation for your dependencies, and open that documentation in a browser
-	* `stack hoogle <function, module or type signature>` to generate a Hoogle database and search for your query
-* The [Yesod cookbook](https://github.com/yesodweb/yesod-cookbook) has sample code for various needs
+- O campo `album.estoque` guarda o saldo atual; `movimentacao_estoque` guarda
+  o histórico de onde ele veio (entradas de fornecedor e saídas por venda).
+- `item_venda.preco_unitario` é copiado do álbum no momento da venda, para que
+  mudar o preço depois não altere vendas antigas.
+- Venda não é apagada: é cancelada, e as unidades voltam ao estoque.
+- Registros em uso não podem ser excluídos (ex.: artista com álbuns, cliente
+  com vendas); a aplicação mostra uma mensagem explicando o motivo.
 
-## Getting Help
+## 5. Integração com API externa
 
-* Ask questions on [Stack Overflow, using the Yesod or Haskell tags](https://stackoverflow.com/questions/tagged/yesod+haskell)
-* Ask the [Yesod Google Group](https://groups.google.com/forum/#!forum/yesodweb)
-* There are several chatrooms you can ask for help:
-	* For IRC, try Freenode#yesod and Freenode#haskell
-	* [Functional Programming Slack](https://fpchat-invite.herokuapp.com/), in the #haskell, #haskell-beginners, or #yesod channels.
-# yesod-minimal-psql-static
+O módulo `src/Api/MusicBrainz.hs` consome duas APIs públicas e gratuitas
+(sem chave), usando `http-conduit` para a requisição e `aeson` para ler o JSON.
+
+**MusicBrainz** (`https://musicbrainz.org/ws/2`):
+
+| Endpoint | Para quê |
+|---|---|
+| `GET /release/?query=...&fmt=json&limit=15` | Busca lançamentos por título (e artista) |
+| `GET /release/{mbid}?inc=recordings+artist-credits+genres&fmt=json` | Dados do álbum: título, data, artista, formato da mídia, gêneros e faixas com duração |
+| `GET /artist/{mbid}?fmt=json` | País e ano de início do artista |
+
+**Cover Art Archive** (`https://coverartarchive.org`):
+
+| Endpoint | Para quê |
+|---|---|
+| `GET /release/{mbid}` | Lista de imagens; usamos a miniatura de 250 px da capa frontal |
+| `/release/{mbid}/front-250` | Miniatura exibida na lista de resultados da busca |
+
+Como os dados são usados: ao importar, a aplicação cria o artista (ou
+reaproveita um já cadastrado com o mesmo nome) com país e ano de início, grava
+o álbum com a URL da capa e todas as faixas. O formato (CD, Vinil...) e o
+gênero são sugeridos a partir do MusicBrainz, e o usuário confirma o preço.
+
+Cuidados exigidos pela API:
+
+- Toda requisição envia um `User-Agent` que identifica a aplicação.
+- O MusicBrainz aceita 1 requisição por segundo. A aplicação espera 1,1 s
+  entre as chamadas seguidas e, se receber `503`, tenta de novo até 3 vezes
+  (esperando 1,5 s e depois 3 s).
+- Falhas de rede, resposta inválida ou álbum não encontrado viram mensagens
+  amigáveis na tela, sem derrubar a aplicação.
+
+## 6. Integrantes
+
+| Nome | GitHub | Commits |
+|---|---|---|
+| Gabriel Nascimento Souza| [@souzagabrieln](https://github.com/souzagabrieln) | layout e CRUD de artistas/gêneros; integração com o MusicBrainz; clientes e vendas |
+| Bruna de Araújo Andrade | [littlebodybigheart7] (https://github.com/littlebodybigheart7) | álbuns e faixas; fornecedores e entrada de estoque; painel, filtros e README |
+
+## Estrutura do código
+
+```
+app/Main.hs              conexão com o SQLite, migração e servidor na porta 8080
+routes.yesodroutes       todas as rotas
+src/Foundation.hs        modelo do banco, layout, menu e página 404
+src/Application.hs       liga as rotas aos handlers
+src/Handler/             uma página (ou grupo de páginas) por arquivo
+src/Api/MusicBrainz.hs   cliente do MusicBrainz e do Cover Art Archive
+src/Model/               tipos gravados no banco (Formato, TipoMovimentacao)
+src/Util/                validações (CPF, CNPJ), formatação de preço e data
+templates/               layout.hamlet e layout.lucius
+static/img/              logo
+```

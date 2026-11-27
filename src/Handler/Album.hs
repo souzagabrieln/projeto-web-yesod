@@ -19,6 +19,9 @@ import Util.Pagina
 import Handler.Faixa (faixaForm, proximoNumero, avisoNumeroRepetido)
 import Data.Time (getCurrentTimeZone)
 import Model.Movimentacao (nomeTipo)
+import Handler.Estoque (estoqueMinimo, situacao)
+import Data.Maybe (fromMaybe)
+import Text.Read (readMaybe)
 
 -- Formulario de album. Serve para cadastro (Nothing) e edicao (Just ...).
 -- Artista e genero sao escolhidos em listas carregadas do banco.
@@ -66,17 +69,93 @@ faltaCadastroBase = do
                 <a href=@{GeneroNovoR}>Cadastrar gênero
         |]
 
--- GET /albuns : tabela com todos os albuns.
+-- Filtros da lista de albuns, lidos dos parametros da URL:
+--   /albuns?q=dark&genero=2&formato=Vinil&estoque=baixo&ordem=preco-asc
+data FiltroAlbuns = FiltroAlbuns
+    { flTexto   :: Text            -- parte do titulo ou do nome do artista
+    , flGenero  :: Maybe GeneroId
+    , flFormato :: Maybe Formato
+    , flEstoque :: Text            -- "", "disponivel", "baixo" ou "zerado"
+    , flOrdem   :: Text            -- "titulo", "preco-asc", "preco-desc" ou "estoque"
+    }
+
+-- Le os filtros da URL. Valores invalidos sao ignorados (viram "sem filtro").
+lerFiltro :: Handler FiltroAlbuns
+lerFiltro = do
+    texto   <- maybe "" T.strip <$> lookupGetParam "q"
+    genero  <- (>>= fromPathPiece) <$> lookupGetParam "genero"
+    formato <- (>>= readMaybe . T.unpack) <$> lookupGetParam "formato"
+    estoque <- fromMaybe "" <$> lookupGetParam "estoque"
+    ordem   <- fromMaybe "titulo" <$> lookupGetParam "ordem"
+    pure (FiltroAlbuns texto genero formato estoque ordem)
+
+-- Algum filtro esta ativo? (para mostrar o link "Limpar filtros")
+filtroAtivo :: FiltroAlbuns -> Bool
+filtroAtivo f = not (T.null (flTexto f)) || flGenero f /= Nothing
+    || flFormato f /= Nothing || not (T.null (flEstoque f))
+
+-- Filtro "contem o texto", que vira LIKE '%texto%' no SQL. O Persistent nao
+-- tem operador pronto para LIKE, entao o filtro e montado a mao com
+-- BackendSpecificFilter. No SQLite o LIKE ignora maiusculas e minusculas
+-- (nas letras sem acento). % e _ sao curingas do LIKE, por isso sao removidos.
+contem :: EntityField registro Text -> Text -> Filter registro
+contem campo texto = Filter campo (FilterValue padrao) (BackendSpecificFilter "LIKE")
+  where
+    padrao = "%" <> T.filter (`notElem` ("%_" :: String)) texto <> "%"
+
+-- Monta os filtros do Persistent. Filtros na mesma lista sao combinados
+-- com AND; o operador ||. combina duas listas com OR.
+--   artistasEncontrados: artistas cujo nome contem o texto buscado
+filtrosAlbum :: FiltroAlbuns -> [ArtistaId] -> [Filter Album]
+filtrosAlbum f artistasEncontrados = porTexto ++ porGenero ++ porFormato ++ porEstoque
+  where
+    porTexto
+        | T.null (flTexto f) = []
+        | otherwise = [AlbumTitulo `contem` flTexto f] ||. [AlbumArtistaId <-. artistasEncontrados]
+    porGenero  = maybe [] (\g -> [AlbumGeneroId ==. g]) (flGenero f)
+    porFormato = maybe [] (\x -> [AlbumFormato ==. x]) (flFormato f)
+    porEstoque = case flEstoque f of
+        "disponivel" -> [AlbumEstoque >. 0]
+        "baixo"      -> [AlbumEstoque >. 0, AlbumEstoque <. estoqueMinimo]
+        "zerado"     -> [AlbumEstoque <=. 0]
+        _            -> []
+
+ordenacao :: Text -> [SelectOpt Album]
+ordenacao "preco-asc"  = [Asc AlbumPreco, Asc AlbumTitulo]
+ordenacao "preco-desc" = [Desc AlbumPreco, Asc AlbumTitulo]
+ordenacao "estoque"    = [Asc AlbumEstoque, Asc AlbumTitulo]
+ordenacao _            = [Asc AlbumTitulo]
+
+-- GET /albuns : tabela de albuns, com busca, filtros e ordenacao.
 -- Os nomes de artista e genero sao buscados uma vez so e guardados
 -- em um Map (id -> nome), em vez de uma consulta por linha.
 getAlbunsR :: Handler Html
 getAlbunsR = do
-    albuns   <- runDB $ selectList [] [Asc AlbumTitulo]
+    f <- lerFiltro
+    artistasEncontrados <- if T.null (flTexto f)
+        then pure []
+        else runDB $ selectKeysList [ArtistaNome `contem` flTexto f] []
+    albuns   <- runDB $ selectList (filtrosAlbum f artistasEncontrados) (ordenacao (flOrdem f))
+    total    <- runDB $ count ([] :: [Filter Album])
     artistas <- runDB $ selectList [] []
-    generos  <- runDB $ selectList [] []
+    generos  <- runDB $ selectList [] [Asc GeneroNome]
     let nomeArtista = Map.fromList [ (k, artistaNome a) | Entity k a <- artistas ]
         nomeGenero  = Map.fromList [ (k, generoNome g)  | Entity k g <- generos ]
         buscar mapa k = Map.findWithDefault "-" k mapa
+        -- Opcoes dos <select> do filtro: (valor, texto, selecionado?)
+        opcoesGenero  = [ (toPathPiece k, generoNome g, Just k == flGenero f) | Entity k g <- generos ]
+        opcoesFiltroFormato = [ (T.pack (show x), nomeFormato x, Just x == flFormato f) | x <- [minBound .. maxBound] ]
+        opcoesEstoque :: [(Text, Text, Bool)]
+        opcoesEstoque = [ (v, rotulo, v == flEstoque f)
+                        | (v, rotulo) <- [ ("disponivel", "Com estoque")
+                                         , ("baixo", "Estoque baixo (menos de " <> T.pack (show estoqueMinimo) <> ")")
+                                         , ("zerado", "Sem estoque") ] ]
+        opcoesOrdem :: [(Text, Text, Bool)]
+        opcoesOrdem   = [ (v, rotulo, v == flOrdem f)
+                        | (v, rotulo) <- [ ("titulo", "Ordenar por título")
+                                         , ("preco-asc", "Menor preço")
+                                         , ("preco-desc", "Maior preço")
+                                         , ("estoque", "Menor estoque") ] ]
     defaultLayout $ do
         setTitle "Álbuns"
         [whamlet|
@@ -85,9 +164,34 @@ getAlbunsR = do
                 <div>
                     <a .botao href=@{BuscaMusicBrainzR}>Importar do MusicBrainz
                     <a .botao.secundario href=@{AlbumNovoR}>Cadastro manual
-            $if null albuns
+
+            <form .filtros method=get action=@{AlbunsR}>
+                <input type=search name=q value=#{flTexto f} placeholder="Título ou artista">
+                <select name=genero>
+                    <option value="">Todos os gêneros
+                    $forall (valor, texto, selecionado) <- opcoesGenero
+                        <option value=#{valor} :selecionado:selected>#{texto}
+                <select name=formato>
+                    <option value="">Todos os formatos
+                    $forall (valor, texto, selecionado) <- opcoesFiltroFormato
+                        <option value=#{valor} :selecionado:selected>#{texto}
+                <select name=estoque>
+                    <option value="">Qualquer estoque
+                    $forall (valor, texto, selecionado) <- opcoesEstoque
+                        <option value=#{valor} :selecionado:selected>#{texto}
+                <select name=ordem>
+                    $forall (valor, texto, selecionado) <- opcoesOrdem
+                        <option value=#{valor} :selecionado:selected>#{texto}
+                <input type=submit value="Filtrar">
+                $if filtroAtivo f
+                    <a href=@{AlbunsR}>Limpar filtros
+
+            $if total == 0
                 <p .vazio>Nenhum álbum cadastrado ainda.
+            $elseif null albuns
+                <p .vazio>Nenhum álbum encontrado com esses filtros.
             $else
+                <p .resultado>#{length albuns} de #{total} álbum(ns)
                 <table>
                     <thead>
                         <tr>
@@ -112,8 +216,10 @@ getAlbunsR = do
                                 <td>#{buscar nomeArtista (albumArtistaId album)}
                                 <td>#{buscar nomeGenero (albumGeneroId album)}
                                 <td>#{nomeFormato (albumFormato album)}
-                                <td>#{formatarPreco (albumPreco album)}
-                                <td>#{albumEstoque album}
+                                <td .nowrap>#{formatarPreco (albumPreco album)}
+                                <td>
+                                    $with (classe, _) <- situacao (albumEstoque album)
+                                        <span .tag class=#{classe}>#{albumEstoque album}
                                 <td .acoes>
                                     <a .botao.secundario href=@{AlbumEditarR albumId}>Editar
                                     ^{botaoExcluir (AlbumExcluirR albumId) (albumTitulo album)}

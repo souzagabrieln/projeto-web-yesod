@@ -264,3 +264,49 @@ form.inline { display: inline; }
     gap: 8px;
     margin-top: 16px;
 }
+
+/* Painel e filtros */
+.botoes-topo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.cartao .detalhe, td .detalhe {
+    color: #6b635b;
+    font-size: 0.85em;
+    margin: 4px 0 0;
+}
+.colunas > section { flex: 1 1 380px; min-width: 0; }
+.primeiros-passos {
+    text-align: left;
+    margin-bottom: 16px;
+    h2 { margin-top: 0; }
+    li { margin: 6px 0; }
+}
+.resumo-catalogo { color: #6b635b; font-size: 0.9em; margin-top: 24px; }
+.filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    input[type=search], select {
+        padding: 8px;
+        border: 1px solid #{borda};
+        border-radius: 4px;
+        font-size: 0.95em;
+        background: white;
+    }
+    input[type=search] { flex: 1 1 200px; }
+    select { width: auto; flex: 0 1 auto; }
+}
+.resultado { color: #6b635b; margin: 0 0 8px; }
+
+/* Ajustes gerais: links na cor da loja, botoes dentro de tabelas sem
+   negrito e, em telas pequenas, tabelas com rolagem horizontal
+   (para nao alargar a pagina inteira). */
+a { color: #{destaque}; }
+table a.botao { font-weight: normal; }
+@media (max-width: 700px) {
+    table { display: block; overflow-x: auto; }
+}
