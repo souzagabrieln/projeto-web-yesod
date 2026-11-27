@@ -155,7 +155,7 @@ getEstoqueR = do
         albuns       <- selectList [] [Asc AlbumEstoque, Asc AlbumTitulo]
         artistas     <- selectList [] []
         fornecedores <- selectList [] []
-        movimentos   <- selectList [] [Desc MovimentacaoEstoqueDataHora, LimitTo 30]
+        movimentos   <- selectList [] [Desc MovimentacaoEstoqueDataHora, Desc MovimentacaoEstoqueId, LimitTo 30]
         pure (albuns, artistas, fornecedores, movimentos)
     let nomeArtista = Map.fromList [ (k, artistaNome a) | Entity k a <- artistas ]
         nomeForn    = Map.fromList [ (k, fornecedorNome f) | Entity k f <- fornecedores ]

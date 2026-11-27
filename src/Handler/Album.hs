@@ -165,7 +165,7 @@ paginaAlbum albumId camposFaixa enctype = do
         genero  <- get404 (albumGeneroId album)
         faixas  <- selectList [FaixaAlbumId ==. albumId] [Asc FaixaNumero]
         movimentos <- selectList [MovimentacaoEstoqueAlbumId ==. albumId]
-                                 [Desc MovimentacaoEstoqueDataHora]
+                                 [Desc MovimentacaoEstoqueDataHora, Desc MovimentacaoEstoqueId]
         fornecedores <- selectList [] []
         pure (album, artista, genero, faixas, movimentos, fornecedores)
     let duracaoTotal = sum [ d | Entity _ f <- faixas, Just d <- [faixaDuracao f] ]

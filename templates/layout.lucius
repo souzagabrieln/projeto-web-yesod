@@ -238,3 +238,29 @@ table a { color: #{destaque}; font-weight: bold; }
 .tag.baixo  { background: #fff3d6; color: #8a5a00; }
 .tag.zerado { background: #fbeaea; color: #b3261e; }
 .cartao .numero { white-space: nowrap; }
+
+/* Vendas */
+.formulario.formulario-largo { max-width: 760px; }
+.itens-venda {
+    margin: 8px 0 12px;
+    td, th { padding: 6px; }
+    td:first-child { width: 24px; color: #6b635b; }
+    input[type=number] { width: 90px; }
+}
+tr.cancelada td { color: #8a8178; text-decoration: line-through; }
+tr.cancelada td:last-child { text-decoration: none; }
+form.inline { display: inline; }
+.dados-venda {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 6px 16px;
+    dt { font-weight: bold; }
+    dd { margin: 0; }
+}
+.erro ul { margin: 6px 0 0; }
+.botoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+}

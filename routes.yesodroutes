@@ -39,5 +39,17 @@
 /estoque                        EstoqueR          GET
 /estoque/entrada                EntradaEstoqueR   GET POST
 
+-- Clientes: listar, cadastrar, editar e excluir
+/clientes                       ClientesR         GET
+/clientes/novo                  ClienteNovoR      GET POST
+/clientes/#ClienteId/editar     ClienteEditarR    GET POST
+/clientes/#ClienteId/excluir    ClienteExcluirR   POST
+
+-- Vendas: listar, registrar, ver detalhes e cancelar
+/vendas                         VendasR           GET
+/vendas/nova                    VendaNovaR        GET POST
+!/vendas/#VendaId               VendaR            GET
+/vendas/#VendaId/cancelar       VendaCancelarR    POST
+
 -- Arquivos estaticos (imagens)
 /static                         StaticR           Static getStatic

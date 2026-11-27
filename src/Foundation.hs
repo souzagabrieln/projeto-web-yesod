@@ -85,6 +85,34 @@ MovimentacaoEstoque
     observacao    Text          Maybe
     deriving Show
 
+-- Cliente da loja. O CPF fica gravado so com os digitos.
+Cliente
+    nome      Text
+    cpf       Text
+    email     Text     Maybe
+    telefone  Text     Maybe
+    UniqueClienteCpf cpf
+    deriving Show
+
+-- Venda: cabecalho com cliente, data e total. Os albuns vendidos
+-- ficam em ItemVenda (uma venda tem varios itens).
+-- Venda nao e apagada: e cancelada, e o estoque volta.
+Venda
+    clienteId ClienteId
+    dataHora  UTCTime
+    total     Double
+    cancelada Bool
+    deriving Show
+
+-- Item da venda. O preco e copiado do album no momento da venda,
+-- para que mudar o preco depois nao altere vendas antigas.
+ItemVenda
+    vendaId       VendaId
+    albumId       AlbumId
+    quantidade    Int
+    precoUnitario Double
+    deriving Show
+
 -- Faixa pertence a um album; o numero nao se repete dentro do album.
 -- duracao fica em segundos.
 Faixa
@@ -116,6 +144,8 @@ menuItens =
     [ ("Início",   HomeR)
     , ("Álbuns",   AlbunsR)
     , ("Estoque",  EstoqueR)
+    , ("Vendas",   VendasR)
+    , ("Clientes", ClientesR)
     , ("Artistas", ArtistasR)
     , ("Gêneros",  GenerosR)
     , ("Fornecedores", FornecedoresR)

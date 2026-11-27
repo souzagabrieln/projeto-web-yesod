@@ -18,5 +18,7 @@ import Handler.Faixa
 import Handler.Importacao
 import Handler.Fornecedor
 import Handler.Estoque
+import Handler.Cliente
+import Handler.Venda
 
 mkYesodDispatch "App" resourcesApp
