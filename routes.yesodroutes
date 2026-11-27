@@ -13,5 +13,17 @@
 /generos/#GeneroId/editar       GeneroEditarR     GET POST
 /generos/#GeneroId/excluir      GeneroExcluirR    POST
 
+-- Albuns: listar, cadastrar, ver detalhes (com faixas), editar e excluir
+/albuns                         AlbunsR           GET
+/albuns/novo                    AlbumNovoR        GET POST
+!/albuns/#AlbumId               AlbumR            GET
+/albuns/#AlbumId/editar         AlbumEditarR      GET POST
+/albuns/#AlbumId/excluir        AlbumExcluirR     POST
+
+-- Faixas: o cadastro fica na pagina do album
+/albuns/#AlbumId/faixas         FaixaNovaR        POST
+/faixas/#FaixaId/editar         FaixaEditarR      GET POST
+/faixas/#FaixaId/excluir        FaixaExcluirR     POST
+
 -- Arquivos estaticos (imagens)
 /static                         StaticR           Static getStatic

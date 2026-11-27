@@ -141,3 +141,52 @@ td.acoes {
     .errors { color: #b3261e; font-size: 0.9em; margin-top: 4px; }
     .required label:after { content: " *"; color: #b3261e; }
 }
+
+/* Albuns: capas e pagina de detalhes */
+.capa-mini {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 3px;
+}
+.sem-capa {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #{texto};
+    color: #e8e2d9;
+    font-size: 1.4em;
+}
+.detalhe-album {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-bottom: 24px;
+    .capa {
+        width: 240px;
+        height: 240px;
+        object-fit: cover;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .sem-capa { font-size: 5em; }
+    h1 { margin-bottom: 4px; }
+    .subtitulo { font-size: 1.2em; color: #6b635b; margin-top: 0; }
+    dl {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 6px 16px;
+    }
+    dt { font-weight: bold; }
+    dd { margin: 0; }
+}
+tfoot td { font-weight: bold; background: #ece7df; }
+select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #{borda};
+    border-radius: 4px;
+    font-size: 1em;
+    background: white;
+}
+table a { color: #{destaque}; font-weight: bold; }

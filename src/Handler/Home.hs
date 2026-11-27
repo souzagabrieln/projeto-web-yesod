@@ -14,6 +14,7 @@ getHomeR = do
     -- count conta os registros de cada tabela ([] = sem filtro)
     totalArtistas <- runDB $ count ([] :: [Filter Artista])
     totalGeneros  <- runDB $ count ([] :: [Filter Genero])
+    totalAlbuns   <- runDB $ count ([] :: [Filter Album])
     defaultLayout $ do
         setTitle "Início"
         [whamlet|
@@ -22,6 +23,10 @@ getHomeR = do
                 Sistema de controle de estoque de uma loja de álbuns de música:
                 catálogo de artistas, gêneros e álbuns, entrada de mercadoria e vendas.
             <div .cartoes>
+                <div .cartao>
+                    <div .numero>#{totalAlbuns}
+                    <p>álbuns no catálogo
+                    <a .botao href=@{AlbunsR}>Ver álbuns
                 <div .cartao>
                     <div .numero>#{totalArtistas}
                     <p>artistas cadastrados

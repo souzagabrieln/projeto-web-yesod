@@ -13,5 +13,7 @@ import Yesod.Core
 import Handler.Home
 import Handler.Artista
 import Handler.Genero
+import Handler.Album
+import Handler.Faixa
 
 mkYesodDispatch "App" resourcesApp

@@ -109,10 +109,19 @@ postGeneroEditarR generoId = do
         _ -> defaultLayout $
             paginaFormulario "Editar gênero" (GeneroEditarR generoId) GenerosR campos enctype
 
--- POST /generos/#GeneroId/excluir : remove o genero.
+-- POST /generos/#GeneroId/excluir : remove o genero, se nao tiver albuns.
 postGeneroExcluirR :: GeneroId -> Handler Html
 postGeneroExcluirR generoId = do
     genero <- runDB $ get404 generoId
-    runDB $ delete generoId
-    setMessage $ toHtml ("Gênero \"" <> generoNome genero <> "\" excluído.")
-    redirect GenerosR
+    -- Nao exclui se houver albuns ligados: o album ficaria apontando
+    -- para um registro que nao existe mais (chave estrangeira).
+    albuns <- runDB $ count [AlbumGeneroId ==. generoId]
+    if albuns > 0
+        then do
+            setMessage $ toHtml ("Não é possível excluir \"" <> generoNome genero
+                <> "\": há " <> T.pack (show albuns) <> " álbum(ns) com esse gênero. Exclua ou altere esses álbuns antes.")
+            redirect GenerosR
+        else do
+            runDB $ delete generoId
+            setMessage $ toHtml ("Gênero \"" <> generoNome genero <> "\" excluído.")
+            redirect GenerosR

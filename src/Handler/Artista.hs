@@ -9,6 +9,7 @@ module Handler.Artista where
 import Foundation
 import Yesod
 import Data.Text (Text)
+import qualified Data.Text as T
 import Util.Validacao
 import Util.Pagina
 
@@ -112,10 +113,19 @@ postArtistaEditarR artistaId = do
         _ -> defaultLayout $
             paginaFormulario "Editar artista" (ArtistaEditarR artistaId) ArtistasR campos enctype
 
--- POST /artistas/#ArtistaId/excluir : remove o artista.
+-- POST /artistas/#ArtistaId/excluir : remove o artista, se nao tiver albuns.
 postArtistaExcluirR :: ArtistaId -> Handler Html
 postArtistaExcluirR artistaId = do
     artista <- runDB $ get404 artistaId
-    runDB $ delete artistaId
-    setMessage $ toHtml ("Artista \"" <> artistaNome artista <> "\" excluído.")
-    redirect ArtistasR
+    -- Nao exclui se houver albuns ligados: o album ficaria apontando
+    -- para um registro que nao existe mais (chave estrangeira).
+    albuns <- runDB $ count [AlbumArtistaId ==. artistaId]
+    if albuns > 0
+        then do
+            setMessage $ toHtml ("Não é possível excluir \"" <> artistaNome artista
+                <> "\": há " <> T.pack (show albuns) <> " álbum(ns) com esse artista. Exclua ou altere esses álbuns antes.")
+            redirect ArtistasR
+        else do
+            runDB $ delete artistaId
+            setMessage $ toHtml ("Artista \"" <> artistaNome artista <> "\" excluído.")
+            redirect ArtistasR

@@ -22,6 +22,7 @@ import Database.Persist.Sqlite
 import Data.Text (Text)
 import Text.Hamlet (hamletFile)
 import Text.Lucius (luciusFile)
+import Model.Formato (Formato)
 
 -- Gera identificadores para os arquivos da pasta static
 -- (ex.: static/img/logo.svg vira img_logo_svg).
@@ -30,6 +31,7 @@ staticFiles "static"
 -- Modelo do banco de dados. Cada bloco vira uma tabela no SQLite,
 -- um tipo em Haskell (Artista, Genero) e uma chave (ArtistaId, GeneroId).
 -- As linhas "Unique..." criam restricoes de unicidade no banco.
+-- Campos do tipo XxxId (ex.: artistaId ArtistaId) viram chaves estrangeiras.
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Artista
     nome      Text
@@ -43,7 +45,36 @@ Genero
     descricao Textarea Maybe
     UniqueGeneroNome nome
     deriving Show
+
+-- Um mesmo titulo pode existir em formatos diferentes (CD e vinil),
+-- cada um com seu preco e seu estoque.
+Album
+    titulo    Text
+    artistaId ArtistaId
+    generoId  GeneroId
+    ano       Int      Maybe
+    formato   Formato
+    preco     Double
+    estoque   Int      default=0
+    capaUrl   Text     Maybe
+    UniqueAlbum titulo artistaId formato
+    deriving Show
+
+-- Faixa pertence a um album; o numero nao se repete dentro do album.
+-- duracao fica em segundos.
+Faixa
+    albumId   AlbumId
+    numero    Int
+    titulo    Text
+    duracao   Int      Maybe
+    UniqueFaixaNumero albumId numero
+    deriving Show
 |]
+
+-- replaceUnique (usado na edicao de album e faixa) compara as
+-- restricoes de unicidade, entao elas precisam de Eq.
+deriving instance Eq (Unique Album)
+deriving instance Eq (Unique Faixa)
 
 -- Estado global da aplicacao: o pool de conexoes com o banco
 -- e os arquivos estaticos.
@@ -58,6 +89,7 @@ mkYesodData "App" $(parseRoutesFile "routes.yesodroutes")
 menuItens :: [(Text, Route App)]
 menuItens =
     [ ("Início",   HomeR)
+    , ("Álbuns",   AlbunsR)
     , ("Artistas", ArtistasR)
     , ("Gêneros",  GenerosR)
     ]
