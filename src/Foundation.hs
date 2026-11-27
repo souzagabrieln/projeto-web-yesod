@@ -19,7 +19,7 @@ module Foundation where
 import Yesod.Core
 import Yesod
 import Data.Text
-import Database.Persist.Postgresql
+import Database.Persist.Sqlite
 import Yesod.Static
 
 staticFiles "static"
